@@ -30,7 +30,8 @@ def init():
 def idle():
     global capture
     _, image = capture.read()
-    
+
+    cv2.cvtColor(image, cv2.COLOR_BGR2RGB, image)
     glTexImage2D(GL_TEXTURE_2D,
             0,
             GL_RGB,
