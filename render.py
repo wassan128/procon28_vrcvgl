@@ -9,9 +9,9 @@ import sys
 from ovr.rift_gl_renderer_compatibility import RiftGLRendererCompatibility
 
 
-# consts 
+# consts
 WIDTH = 640
-HEIGHT = 480 
+HEIGHT = 480
 N_RANGE = 1.0
 ESC = 27
 
@@ -19,8 +19,12 @@ ESC = 27
 global capture
 capture = None
 
+
 class HMDRender():
+
     def __init__(self):
+        # self.renderer = RiftGLRendererCompatibility()
+
         glutInit(sys.argv)
         glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH)
         glutInitWindowSize(WIDTH, HEIGHT)
@@ -29,16 +33,16 @@ class HMDRender():
 
         glClearColor(0.0, 0.0, 0.0, 1.0)
 
-        glutDisplayFunc(self.display)
-        glutReshapeFunc(self.reshape)
-        glutKeyboardFunc(self.keyboard)
-        glutIdleFunc(self.idle)
+        glutDisplayFunc(self._display)
+        glutReshapeFunc(self._reshape)
+        glutKeyboardFunc(self._keyboard)
+        glutIdleFunc(self._idle)
 
         glutMainLoop()
 
 
     # glutIdleFunc
-    def idle(self):
+    def _idle(self):
         global capture
         _, image = capture.read()
 
@@ -55,7 +59,7 @@ class HMDRender():
 
 
     # glutDisplayFunc
-    def display(self):
+    def _display(self):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         glEnable(GL_TEXTURE_2D)
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
@@ -83,7 +87,7 @@ class HMDRender():
 
 
     # glutReshapeFunc
-    def reshape(self, w, h):
+    def _reshape(self, w, h):
         if h == 0:
             h = 1
 
@@ -102,7 +106,7 @@ class HMDRender():
 
 
     # glutKeyboardFunc
-    def keyboard(self, key, x, y):
+    def _keyboard(self, key, x, y):
         if key == chr(ESC):
             sys.exit()
 
