@@ -15,15 +15,12 @@ HEIGHT = 480
 N_RANGE = 1.0
 ESC = 27
 
-# global variable
-global capture
-capture = None
-
 
 class HMDRender():
 
-    def __init__(self):
+    def __init__(self, capture):
         # self.renderer = RiftGLRendererCompatibility()
+        self.capture = capture
 
         glutInit(sys.argv)
         glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH)
@@ -43,8 +40,7 @@ class HMDRender():
 
     # glutIdleFunc
     def _idle(self):
-        global capture
-        _, image = capture.read()
+        _, image = self.capture.read()
 
         cv2.cvtColor(image, cv2.COLOR_BGR2RGB, image)
         glTexImage2D(GL_TEXTURE_2D,
@@ -113,14 +109,13 @@ class HMDRender():
 
 ### main function ###
 def main():
-    global capture
     capture = cv2.VideoCapture(0)
     
     # settings of capture frame
     capture.set(cv2.CAP_PROP_FRAME_WIDTH, WIDTH)
     capture.set(cv2.CAP_PROP_FRAME_HEIGHT, HEIGHT)
     
-    HMDRender() 
+    HMDRender(capture) 
 
 
 if __name__ == "__main__":
