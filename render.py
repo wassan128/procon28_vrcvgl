@@ -7,7 +7,7 @@ import sys
 
 # for oculus compatibility
 from ovr.rift_gl_renderer_compatibility import RiftGLRendererCompatibility
-
+from ovr.oculus_drawer_compatibility import OculusDrawerCompatibility
 
 # consts
 WIDTH = 640
@@ -19,8 +19,10 @@ ESC = 27
 class HMDRender():
 
     def __init__(self, capture):
-        # self.renderer = RiftGLRendererCompatibility()
         self.capture = capture
+
+        self.renderer = RiftGLRendererCompatibility()
+        self.renderer.append(OculusDrawerCompatibility(WIDTH, HEIGHT))
 
         glutInit(sys.argv)
         glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH)
@@ -35,6 +37,9 @@ class HMDRender():
         glutKeyboardFunc(self._keyboard)
         glutIdleFunc(self._idle)
 
+        self.renderer.init_gl()
+        self.renderer.rift.recenter_pose()
+
         glutMainLoop()
 
 
@@ -43,19 +48,14 @@ class HMDRender():
         _, image = self.capture.read()
 
         cv2.cvtColor(image, cv2.COLOR_BGR2RGB, image)
-        glTexImage2D(GL_TEXTURE_2D,
-                0,
-                GL_RGB,
-                WIDTH, HEIGHT,
-                0,
-                GL_RGB,
-                GL_UNSIGNED_BYTE,
-                image)
+        self.display_gl(image)
         glutPostRedisplay()
 
 
     # glutDisplayFunc
     def _display(self):
+        self.renderer.display_gl(self.capture)
+
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         glEnable(GL_TEXTURE_2D)
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
@@ -66,17 +66,6 @@ class HMDRender():
 
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
-
-        glBegin(GL_QUADS)
-        glTexCoord2f(0.0, 1.0)
-        glVertex2f(0.0, 0.0)
-        glTexCoord2f(1.0, 1.0)
-        glVertex2f(WIDTH, 0.0)
-        glTexCoord2f(1.0, 0.0)
-        glVertex2f(WIDTH, HEIGHT)
-        glTexCoord2f(0.0, 0.0)
-        glVertex2f(0.0, HEIGHT)
-        glEnd()
 
         glFlush()
         glutSwapBuffers()
