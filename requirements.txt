@@ -6,6 +6,4 @@ numpy==1.13.1
 opencv-python==3.3.0.10
 ovr==1.16.1
 pbr==3.1.1
-PyOpenGL==3.1.1
-PyOpenGL-accelerate==3.1.1
 six==1.10.0
