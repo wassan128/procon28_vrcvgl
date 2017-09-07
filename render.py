@@ -126,6 +126,8 @@ def main():
     capture.set(cv2.CAP_PROP_FRAME_HEIGHT, HEIGHT)
     
     HMDRender(capture) 
+    
+    capture.release()
 
 
 if __name__ == "__main__":
