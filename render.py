@@ -10,8 +10,8 @@ from ovr.rift_gl_renderer_compatibility import RiftGLRendererCompatibility
 
 
 # consts
-WIDTH = 640
-HEIGHT = 480
+WIDTH = 100 
+HEIGHT = 100
 N_RANGE = 1.0
 ESC = 27
 
@@ -109,14 +109,26 @@ class HMDRender():
 
 ### main function ###
 def main():
-    capture = cv2.VideoCapture(0)
+    capture = cv2.VideoCapture("https://walterebert.com/playground/video/hls/sintel-trailer.m3u8")
+    # capture = cv2.VideoCapture(0)
+
+    """
+    cv2.namedWindow("HLS", cv2.WINDOW_AUTOSIZE)
+    while True:
+        f, im = capture.read()
+        cv2.imshow("HLS", im)
+        if cv2.waitKey(5) == 27:
+            break
+    capture.release()
+    cv2.destroyAllWindows()
+    """
     
     # settings of capture frame
     capture.set(cv2.CAP_PROP_FRAME_WIDTH, WIDTH)
     capture.set(cv2.CAP_PROP_FRAME_HEIGHT, HEIGHT)
     
     HMDRender(capture) 
-
+    capture.release()
 
 if __name__ == "__main__":
     main()
