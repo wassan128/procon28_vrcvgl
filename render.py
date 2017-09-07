@@ -7,7 +7,6 @@ import sys
 
 # for oculus compatibility
 from ovr.rift_gl_renderer_compatibility import RiftGLRendererCompatibility
-from ovr.oculus_drawer_compatibility import OculusDrawerCompatibility
 
 # consts
 WIDTH = 640
@@ -16,6 +15,28 @@ N_RANGE = 1.0
 ESC = 27
 
 
+class OculusDrawerCompatibility():
+
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
+
+    def init_gl(self):
+        pass
+
+    def display_gl(self):
+        glBegin(GL_QUADS)
+        glTexCoord2f(0.0, 1.0)
+        glVertex2f(0.0, 0.0)
+        glTexCoord2f(1.0, 1.0)
+        glVertex2f(width, 0.0)
+        glTexCoord2f(1.0, 0.0)
+        glVertex2f(self.width, self.height)
+        glTexCoord2f(0.0, 0.0)
+        glVertex2f(0.0, self.height)
+        glEnd()
+
+    
 class HMDRender():
 
     def __init__(self, capture):
