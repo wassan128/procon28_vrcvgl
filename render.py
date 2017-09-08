@@ -10,8 +10,8 @@ from ovr.rift_gl_renderer_compatibility import RiftGLRendererCompatibility
 
 
 # consts
-WIDTH = 640 
-HEIGHT = 480
+WIDTH = 640
+HEIGHT = 480 
 N_RANGE = 1.0
 ESC = 27
 LEFT = 0
@@ -20,10 +20,11 @@ RIGHT = 1
 
 class HMDRender():
 
-    def __init__(self, capture):
+    def __init__(self, caps):
         # self.renderer = RiftGLRendererCompatibility()
-        self.capture = capture
+        self.caps = caps
         self.win_subs = []
+        self.image = -1
 
         glutInit(sys.argv)
         
@@ -43,7 +44,6 @@ class HMDRender():
         self.win_subs.append(glutCreateSubWindow(self.win_main, 0, 0, WIDTH / 2, HEIGHT))
         glutDisplayFunc(self._display_left)
         glutKeyboardFunc(self._keyboard)
-        glutIdleFunc(self._idle_left)
 
         ### right window(sub window)
         glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH)
@@ -51,7 +51,6 @@ class HMDRender():
         self.win_subs.append(glutCreateSubWindow(self.win_main, WIDTH / 2, 0, WIDTH / 2, HEIGHT))
         glutDisplayFunc(self._display_right)
         glutKeyboardFunc(self._keyboard)
-        glutIdleFunc(self._idle_right)
 
         glutSetWindow(self.win_main)
         glutMainLoop()
@@ -59,39 +58,18 @@ class HMDRender():
 
     ### glutIdleFunc
     def _idle(self):
-        #self._idle_left()
-        #self._idle_right()
-        pass
+        #glutPostRedisplay()
+        self._idle_left()
+        self._idle_right()
 
 
     ### glutIdleFunc
     def _idle_left(self):
-        _, image = self.capture.read()
-
-        cv2.cvtColor(image, cv2.COLOR_BGR2RGB, image)
-        glTexImage2D(GL_TEXTURE_2D,
-                0,
-                GL_RGB,
-                WIDTH, HEIGHT,
-                0,
-                GL_RGB,
-                GL_UNSIGNED_BYTE,
-                image)
         glutPostRedisplay()
+
 
     ### glutIdleFunc
     def _idle_right(self):
-        _, image = self.capture.read()
-
-        cv2.cvtColor(image, cv2.COLOR_BGR2RGB, image)
-        glTexImage2D(GL_TEXTURE_2D,
-                0,
-                GL_RGB,
-                WIDTH, HEIGHT,
-                0,
-                GL_RGB,
-                GL_UNSIGNED_BYTE,
-                image)
         glutPostRedisplay()
 
 
@@ -100,8 +78,19 @@ class HMDRender():
         glClearColor(0.0, 0.0, 0.0, 1.0)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
+
     ### left window glutDisplayFunc
     def _display_left(self):
+        _, image = self.caps[LEFT].read()
+        #cv2.cvtColor(image, cv2.COLOR_BGR2RGB, image)
+        glTexImage2D(GL_TEXTURE_2D,
+                0,
+                GL_RGB,
+                WIDTH, HEIGHT,
+                0,
+                GL_RGB,
+                GL_UNSIGNED_BYTE,
+                image)
         print("left display")
         glClearColor(1.0, 0.0, 0.0, 0.0)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
@@ -133,6 +122,16 @@ class HMDRender():
 
     ### right window glutDisplayFunc
     def _display_right(self):
+        _, image = self.caps[RIGHT].read()
+        cv2.cvtColor(image, cv2.COLOR_BGR2RGB, image)
+        glTexImage2D(GL_TEXTURE_2D,
+                0,
+                GL_RGB,
+                WIDTH, HEIGHT,
+                0,
+                GL_RGB,
+                GL_UNSIGNED_BYTE,
+                image)
         print("right display")
         glClearColor(0.0, 0.0, 1.0, 0.0)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
@@ -189,26 +188,21 @@ class HMDRender():
 
 ### main function ###
 def main():
-    # capture = cv2.VideoCapture("https://walterebert.com/playground/video/hls/sintel-trailer.m3u8")
-    capture = cv2.VideoCapture(0)
+    caps = []
+    #caps.append(cv2.VideoCapture("https://walterebert.com/playground/video/hls/sintel-trailer.m3u8"))
+    caps.append(cv2.VideoCapture(0))
+    caps.append(cv2.VideoCapture(0))
 
-    """
-    cv2.namedWindow("HLS", cv2.WINDOW_AUTOSIZE)
-    while True:
-        f, im = capture.read()
-        cv2.imshow("HLS", im)
-        if cv2.waitKey(5) == 27:
-            break
-    capture.release()
-    cv2.destroyAllWindows()
-    """
-    
     ### settings of capture frame
-    capture.set(cv2.CAP_PROP_FRAME_WIDTH, WIDTH)
-    capture.set(cv2.CAP_PROP_FRAME_HEIGHT, HEIGHT)
-    
-    HMDRender(capture) 
-    capture.release()
+    for cap in caps:
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, WIDTH)
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, HEIGHT)
+
+    HMDRender(caps)
+
+    ### release
+    for cap in caps:
+        cap.release()
 
 if __name__ == "__main__":
     main()
