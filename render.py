@@ -36,7 +36,6 @@ class HMDRender():
         glutDisplayFunc(self._display)
         glutReshapeFunc(self._reshape)
         glutKeyboardFunc(self._keyboard)
-        glutIdleFunc(self._idle)
 
         ### left window(sub window)
         glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH)
@@ -52,25 +51,15 @@ class HMDRender():
         glutDisplayFunc(self._display_right)
         glutKeyboardFunc(self._keyboard)
 
-        glutSetWindow(self.win_main)
+        glutIdleFunc(self._idle)
         glutMainLoop()
 
 
     ### glutIdleFunc
     def _idle(self):
-        #glutPostRedisplay()
-        self._idle_left()
-        self._idle_right()
-
-
-    ### glutIdleFunc
-    def _idle_left(self):
-        glutPostRedisplay()
-
-
-    ### glutIdleFunc
-    def _idle_right(self):
-        glutPostRedisplay()
+        for win in self.win_subs:
+            glutSetWindow(win)
+            glutPostRedisplay()
 
 
     ### main window glutDisplayFunc
@@ -82,7 +71,7 @@ class HMDRender():
     ### left window glutDisplayFunc
     def _display_left(self):
         _, image = self.caps[LEFT].read()
-        #cv2.cvtColor(image, cv2.COLOR_BGR2RGB, image)
+        cv2.cvtColor(image, cv2.COLOR_BGR2RGB, image)
         glTexImage2D(GL_TEXTURE_2D,
                 0,
                 GL_RGB,
