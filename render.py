@@ -5,6 +5,8 @@ from OpenGL.GLUT import *
 import numpy as np
 import sys
 
+# for oculus compatibility
+from ovr.rift_gl_renderer_compatibility import RiftGLRendererCompatibility
 
 # consts
 WIDTH = 640 
@@ -15,11 +17,36 @@ LEFT = 0
 RIGHT = 1
 
 
+class OculusDrawerCompatibility():
+
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
+
+    def init_gl(self):
+        pass
+
+    def display_gl(self):
+        glBegin(GL_QUADS)
+        glTexCoord2f(0.0, 1.0)
+        glVertex2f(0.0, 0.0)
+        glTexCoord2f(1.0, 1.0)
+        glVertex2f(width, 0.0)
+        glTexCoord2f(1.0, 0.0)
+        glVertex2f(self.width, self.height)
+        glTexCoord2f(0.0, 0.0)
+        glVertex2f(0.0, self.height)
+        glEnd()
+
+    
 class HMDRender():
 
     def __init__(self, caps):
         self.caps = caps
         self.win_subs = []
+
+        self.renderer = RiftGLRendererCompatibility()
+        self.renderer.append(OculusDrawerCompatibility(WIDTH, HEIGHT))
 
         glutInit(sys.argv)
         
@@ -45,6 +72,10 @@ class HMDRender():
         self.win_subs.append(glutCreateSubWindow(self.win_main, WIDTH / 2, 0, WIDTH / 2, HEIGHT))
         glutDisplayFunc(self._display_right)
         glutKeyboardFunc(self._keyboard)
+
+
+        self.renderer.init_gl()
+        self.renderer.rift.recenter_pose()
 
         glutIdleFunc(self._idle)
         glutMainLoop()
@@ -80,7 +111,6 @@ class HMDRender():
         cv2.cvtColor(image, cv2.COLOR_BGR2RGB, image)
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WIDTH, HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, image)
 
-        glClearColor(1.0, 0.0, 0.0, 0.0)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
         glEnable(GL_TEXTURE_2D)
@@ -92,8 +122,8 @@ class HMDRender():
 
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
-
-        glBegin(GL_QUADS)
+	
+	glBegin(GL_QUADS)
         glTexCoord2f(0.0, 1.0)
         glVertex2f(0.0, 0.0)
         glTexCoord2f(1.0, 1.0)
@@ -135,7 +165,6 @@ class HMDRender():
 ### main function ###
 def main():
     caps = []
-    #caps.append(cv2.VideoCapture("https://walterebert.com/playground/video/hls/sintel-trailer.m3u8"))
     caps.append(cv2.VideoCapture(0))
     caps.append(cv2.VideoCapture(0))
 
