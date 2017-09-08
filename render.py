@@ -5,13 +5,10 @@ from OpenGL.GLUT import *
 import numpy as np
 import sys
 
-# for oculus compatibility
-from ovr.rift_gl_renderer_compatibility import RiftGLRendererCompatibility
-
 
 # consts
-WIDTH = 640
-HEIGHT = 480 
+WIDTH = 640 
+HEIGHT = 320 
 N_RANGE = 1.0
 ESC = 27
 LEFT = 0
@@ -21,10 +18,8 @@ RIGHT = 1
 class HMDRender():
 
     def __init__(self, caps):
-        # self.renderer = RiftGLRendererCompatibility()
         self.caps = caps
         self.win_subs = []
-        self.image = -1
 
         glutInit(sys.argv)
         
@@ -71,16 +66,20 @@ class HMDRender():
     ### left window glutDisplayFunc
     def _display_left(self):
         _, image = self.caps[LEFT].read()
+        self._display_common(image)
+
+
+    ### right window glutDisplayFunc
+    def _display_right(self):
+        _, image = self.caps[RIGHT].read()
+        self._display_common(image)
+
+
+    ### common(right and left) window glutDisplayFunc
+    def _display_common(self, image):
         cv2.cvtColor(image, cv2.COLOR_BGR2RGB, image)
-        glTexImage2D(GL_TEXTURE_2D,
-                0,
-                GL_RGB,
-                WIDTH, HEIGHT,
-                0,
-                GL_RGB,
-                GL_UNSIGNED_BYTE,
-                image)
-        print("left display")
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WIDTH, HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, image)
+
         glClearColor(1.0, 0.0, 0.0, 0.0)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
@@ -109,47 +108,6 @@ class HMDRender():
         glutSwapBuffers()
 
 
-    ### right window glutDisplayFunc
-    def _display_right(self):
-        _, image = self.caps[RIGHT].read()
-        cv2.cvtColor(image, cv2.COLOR_BGR2RGB, image)
-        glTexImage2D(GL_TEXTURE_2D,
-                0,
-                GL_RGB,
-                WIDTH, HEIGHT,
-                0,
-                GL_RGB,
-                GL_UNSIGNED_BYTE,
-                image)
-        print("right display")
-        glClearColor(0.0, 0.0, 1.0, 0.0)
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-
-        glEnable(GL_TEXTURE_2D)
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
-
-        glMatrixMode(GL_PROJECTION)
-        glLoadIdentity()
-        gluOrtho2D(0, WIDTH, 0, HEIGHT)
-
-        glMatrixMode(GL_MODELVIEW)
-        glLoadIdentity()
-
-        glBegin(GL_QUADS)
-        glTexCoord2f(0.0, 1.0)
-        glVertex2f(0.0, 0.0)
-        glTexCoord2f(1.0, 1.0)
-        glVertex2f(WIDTH, 0.0)
-        glTexCoord2f(1.0, 0.0)
-        glVertex2f(WIDTH, HEIGHT)
-        glTexCoord2f(0.0, 0.0)
-        glVertex2f(0.0, HEIGHT)
-        glEnd()
-
-        glFlush()
-        glutSwapBuffers()
- 
-
     ### glutReshapeFunc
     def _reshape(self, w, h):
         if h == 0:
@@ -157,14 +115,13 @@ class HMDRender():
 
         glViewport(0, 0, w, h)
         glMatrixMode(GL_PROJECTION)
-
         glLoadIdentity()
 
         if w <= h:
             glOrtho(-N_RANGE, N_RANGE, -N_RANGE * h / w, N_RANGE * h / w, -N_RANGE, N_RANGE)
         else:
             glOrtho(-N_RANGE * w / h, N_RANGE * w / h, -N_RANGE, N_RANGE, -N_RANGE, N_RANGE)
-        
+
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
 
