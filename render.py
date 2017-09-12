@@ -5,10 +5,12 @@ from OpenGL.GLUT import *
 import numpy as np
 import sys
 
-# for oculus compatibility
+### for oculus compatibility
+sys.path.append("./pyovr/ovr")
+#from rift_gl_renderer_compatibility import RiftGLRendererCompatibility
 from ovr.rift_gl_renderer_compatibility import RiftGLRendererCompatibility
 
-# consts
+### consts
 WIDTH = 640 
 HEIGHT = 320 
 N_RANGE = 1.0
@@ -38,6 +40,9 @@ class OculusDrawerCompatibility():
         glVertex2f(0.0, self.height)
         glEnd()
 
+    def dispose_gl(self):
+        pass
+    
     
 class HMDRender():
 
@@ -49,30 +54,31 @@ class HMDRender():
         self.renderer.append(OculusDrawerCompatibility(WIDTH, HEIGHT))
 
         glutInit(sys.argv)
-        
+
         ### main window
         glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH)
         glutInitWindowSize(WIDTH, HEIGHT)
         glutInitWindowPosition(WIDTH - WIDTH / 2, HEIGHT - HEIGHT / 2)
         self.win_main = glutCreateWindow(b"HighSight")
         glutDisplayFunc(self._display)
-        glutReshapeFunc(self._reshape)
+        #glutReshapeFunc(self._reshape)
+        glutReshapeFunc(self.renderer.resize_gl)
         glutKeyboardFunc(self._keyboard)
 
         ### left window(sub window)
         glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH)
         glutInitWindowSize(WIDTH / 2, HEIGHT)
         self.win_subs.append(glutCreateSubWindow(self.win_main, 0, 0, WIDTH / 2, HEIGHT))
-        glutDisplayFunc(self._display_left)
+        #glutDisplayFunc(self._display_left)
+        glutDisplayFunc(self._display)
         glutKeyboardFunc(self._keyboard)
 
         ### right window(sub window)
         glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH)
-        glutInitWindowSize(WIDTH / 2, HEIGHT)
         self.win_subs.append(glutCreateSubWindow(self.win_main, WIDTH / 2, 0, WIDTH / 2, HEIGHT))
-        glutDisplayFunc(self._display_right)
+        #glutDisplayFunc(self._display_right)
+        glutDisplayFunc(self._display)
         glutKeyboardFunc(self._keyboard)
-
 
         self.renderer.init_gl()
         self.renderer.rift.recenter_pose()
@@ -83,15 +89,22 @@ class HMDRender():
 
     ### glutIdleFunc
     def _idle(self):
+        self.renderer.display_gl()
+        """
         for win in self.win_subs:
             glutSetWindow(win)
             glutPostRedisplay()
+        """
 
 
     ### main window glutDisplayFunc
     def _display(self):
+        """
         glClearColor(0.0, 0.0, 0.0, 1.0)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+        """
+        self.renderer.display_gl()
+        glutSwapBuffers()
 
 
     ### left window glutDisplayFunc
@@ -123,7 +136,7 @@ class HMDRender():
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
 	
-	glBegin(GL_QUADS)
+        glBegin(GL_QUADS)
         glTexCoord2f(0.0, 1.0)
         glVertex2f(0.0, 0.0)
         glTexCoord2f(1.0, 1.0)
@@ -140,6 +153,8 @@ class HMDRender():
 
     ### glutReshapeFunc
     def _reshape(self, w, h):
+        pass
+        """
         if h == 0:
             h = 1
 
@@ -154,12 +169,18 @@ class HMDRender():
 
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
+        """
 
 
     ### glutKeyboardFunc
     def _keyboard(self, key, x, y):
         if key == chr(ESC):
-            sys.exit()
+			if bool(glutLeaveMainLoop):
+				glutLeaveMainLoop()
+			sys.exit()
+        if key == 'r':
+            self.renderer.rift.recenter_pose()
+
 
 
 ### main function ###

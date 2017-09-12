@@ -15,25 +15,20 @@ WIDTH = 640
 HEIGHT = 480 
 
 class OculusDrawerCompatibility():
+
+    def __init__(self, cap):
+        self.cap = cap
     
     def init_gl(self):
         pass
 
     def display_gl(self):
-        glBegin(GL_QUADS)
-        glTexCoord2f(0.0, 0.0)
-        glVertex2f(0.0, 0.0)
-        glTexCoord2f(1.0, 0.0)
-        glVertex2f(WIDTH, 0.0)
-        glTexCoord2f(1.0, 1.0)
-        glVertex2f(WIDTH, HEIGHT)
-        glTexCoord2f(0.0, 1.0)
-        glVertex2f(0.0, HEIGHT)
-        glEnd()
-
-    def idle_gl(self, image):
+        _, image = self.cap.read()
+        cv2.cvtColor(image, cv2.COLOR_BGR2RGB, image)
+        
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WIDTH, HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, image)
 
+        glClearColor(0.0, 0.0, 0.0, 1.0)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
         glEnable(GL_TEXTURE_2D)
@@ -45,11 +40,20 @@ class OculusDrawerCompatibility():
 
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
-        glutPostRedisplay()
-	
+
+        glBegin(GL_QUADS)
+        glTexCoord2f(0.0, 1.0)
+        glVertex2f(0.0, 0.0)
+        glTexCoord2f(1.0, 1.0)
+        glVertex2f(WIDTH, 0.0)
+        glTexCoord2f(1.0, 0.0)
+        glVertex2f(WIDTH, HEIGHT)
+        glTexCoord2f(0.0, 0.0)
+        glVertex2f(0.0, HEIGHT)
+        glEnd()
+
         glFlush()
         glutSwapBuffers()
-
 
     def dispose_gl(self):
         pass
@@ -58,28 +62,22 @@ class OculusDrawerCompatibility():
 class GlutDemoApp():
 
     def __init__(self, cap):
-        self.cap = cap
         self.renderer = RiftGLRendererCompatibility()
-        self.renderer.append(OculusDrawerCompatibility())
+        self.renderer.append(OculusDrawerCompatibility(cap))
 
         glutInit()
-        glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE)
+        glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH)
         glutInitWindowSize(WIDTH, HEIGHT)
         glutInitWindowPosition(50, 50)
-        win = glutCreateWindow(b"Just a triangle")
+        win = glutCreateWindow(b"HighSight")
 
         glutDisplayFunc(self.display)
-        glutIdleFunc(self.idle)
+        glutIdleFunc(self.renderer.display_gl)
         glutReshapeFunc(self.renderer.resize_gl)
         glutKeyboardFunc(self.key_press)
         self.renderer.init_gl()
         self.renderer.rift.recenter_pose()
         glutMainLoop()
-
-    def idle(self):
-        _, image = self.cap.read()
-        cv2.cvtColor(image, cv2.COLOR_BGR2RGB, image)
-        self.renderer[0].idle_gl(image)
 
     def display(self):
         self.renderer.display_gl()
@@ -100,4 +98,6 @@ if __name__ == "__main__":
     cap = cv2.VideoCapture(0)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, WIDTH)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, HEIGHT)
+
     GlutDemoApp(cap)
+
