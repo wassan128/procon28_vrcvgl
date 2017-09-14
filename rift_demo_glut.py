@@ -26,6 +26,12 @@ class OculusDrawerCompatibility():
     def init_gl(self):
         pass
 
+    def display_gl(self, eye):
+        if eye == "left":
+            self.display_rift_left()
+        elif eye == "right":
+            self.display_rift_right()
+        
     def display_rift_left(self):
         _, image = self.caps[LEFT].read()
         self.display_common_gl(image)
@@ -59,6 +65,9 @@ class OculusDrawerCompatibility():
         glTexCoord2f(0.0, 0.0)
         glVertex2f(0.0, HEIGHT)
         glEnd()
+
+        glFlush()
+        glutSwapBuffers()
     
     def dispose_gl(self):
         pass
@@ -67,7 +76,6 @@ class OculusDrawerCompatibility():
 class HMDRender():
 
     def __init__(self, caps):
-        self.caps = caps
         self.win_subs = []
 
         self.renderer = RiftGLRendererCompatibility()
@@ -87,13 +95,13 @@ class HMDRender():
         glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH)
         glutInitWindowSize(WIDTH / 2, HEIGHT)
         self.win_subs.append(glutCreateSubWindow(self.win_main, 0, 0, WIDTH / 2, HEIGHT))
-        glutDisplayFunc(self.renderer[0].display_rift_left)
+        glutDisplayFunc(self.renderer.display_gl)
         glutKeyboardFunc(self._keyboard)
 
         ### right window(sub window)
         glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH)
         self.win_subs.append(glutCreateSubWindow(self.win_main, WIDTH / 2, 0, WIDTH / 2, HEIGHT))
-        glutDisplayFunc(self.renderer[0].display_rift_right)
+        glutDisplayFunc(self.renderer.display_gl)
         glutKeyboardFunc(self._keyboard)
 
         self.renderer.init_gl()
@@ -104,8 +112,7 @@ class HMDRender():
 
     def _display(self):
         glClearColor(0, 0, 1, 0)
-        self.renderer.display_gl()
-        glutSwapBuffers()
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
     def _idle(self):
         for win in self.win_subs:
@@ -138,8 +145,7 @@ class HMDRender():
         if key == "r":
             self.renderer.rift.recenter_pose()
 
-
-if __name__ == "__main__":
+def main():
     caps = []
     caps.append(cv2.VideoCapture(0))
     caps.append(cv2.VideoCapture(0))
@@ -149,3 +155,7 @@ if __name__ == "__main__":
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, HEIGHT)
 
     HMDRender(caps)
+
+
+if __name__ == "__main__":
+    main()
