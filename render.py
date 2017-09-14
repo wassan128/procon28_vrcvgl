@@ -6,13 +6,12 @@ import numpy as np
 import sys
 
 ### for oculus compatibility
-sys.path.append("./pyovr/ovr")
-#from rift_gl_renderer_compatibility import RiftGLRendererCompatibility
-from ovr.rift_gl_renderer_compatibility import RiftGLRendererCompatibility
+sys.path.append("procon28_pyovr/ovr")
+from rift_gl_renderer_compatibility import RiftGLRendererCompatibility
 
 ### consts
-WIDTH = 640 
-HEIGHT = 320 
+WIDTH = 1280
+HEIGHT = 720 
 N_RANGE = 1.0
 ESC = 27
 LEFT = 0
@@ -87,6 +86,7 @@ class HMDRender():
         glutMainLoop()
 
 
+
     ### glutIdleFunc
     def _idle(self):
         self.renderer.display_gl()
@@ -153,8 +153,6 @@ class HMDRender():
 
     ### glutReshapeFunc
     def _reshape(self, w, h):
-        pass
-        """
         if h == 0:
             h = 1
 
@@ -169,7 +167,6 @@ class HMDRender():
 
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
-        """
 
 
     ### glutKeyboardFunc
