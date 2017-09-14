@@ -1,3 +1,3 @@
-oculus/
-pyovr*/
+oculus*/
+*pyovr*/
 *.swp

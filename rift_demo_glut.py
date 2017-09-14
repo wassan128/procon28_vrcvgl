@@ -7,12 +7,13 @@ from OpenGL.GLU import *
 import numpy as np
 import sys
 
-sys.path.append("pyovr/ovr")
+sys.path.append("procon28_pyovr/ovr")
 from rift_gl_renderer_compatibility import RiftGLRendererCompatibility
 
 
-WIDTH = 640 
-HEIGHT = 480 
+WIDTH = 1280 
+HEIGHT = 720 
+
 
 class OculusDrawerCompatibility():
 
@@ -25,11 +26,8 @@ class OculusDrawerCompatibility():
     def display_gl(self):
         _, image = self.cap.read()
         cv2.cvtColor(image, cv2.COLOR_BGR2RGB, image)
-        
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WIDTH, HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, image)
 
-        glClearColor(0.0, 0.0, 0.0, 1.0)
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WIDTH, HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, image)
 
         glEnable(GL_TEXTURE_2D)
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
@@ -42,18 +40,15 @@ class OculusDrawerCompatibility():
         glLoadIdentity()
 
         glBegin(GL_QUADS)
+        glTexCoord2f(0.0, 0.0)
+        glVertex2f(0.0, HEIGHT)
         glTexCoord2f(0.0, 1.0)
         glVertex2f(0.0, 0.0)
         glTexCoord2f(1.0, 1.0)
         glVertex2f(WIDTH, 0.0)
         glTexCoord2f(1.0, 0.0)
         glVertex2f(WIDTH, HEIGHT)
-        glTexCoord2f(0.0, 0.0)
-        glVertex2f(0.0, HEIGHT)
         glEnd()
-
-        glFlush()
-        glutSwapBuffers()
 
     def dispose_gl(self):
         pass
@@ -85,7 +80,6 @@ class GlutDemoApp():
 
     def key_press(self, key, x, y):
         if ord(key) == 27:
-            # print "Escape!"
             if bool(glutLeaveMainLoop):
                 glutLeaveMainLoop()
             else:
@@ -100,4 +94,3 @@ if __name__ == "__main__":
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, HEIGHT)
 
     GlutDemoApp(cap)
-
