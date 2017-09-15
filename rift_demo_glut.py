@@ -17,7 +17,6 @@ N_RANGE = 1.0
 LEFT = 0
 RIGHT = 1
 
-
 class OculusDrawerCompatibility():
 
     def __init__(self, caps):
@@ -26,12 +25,6 @@ class OculusDrawerCompatibility():
     def init_gl(self):
         pass
 
-    def display_gl(self, eye):
-        if eye == "left":
-            self.display_rift_left()
-        elif eye == "right":
-            self.display_rift_right()
-        
     def display_rift_left(self):
         _, image = self.caps[LEFT].read()
         self.display_common_gl(image)
@@ -42,7 +35,7 @@ class OculusDrawerCompatibility():
 
     def display_common_gl(self, image):
         cv2.cvtColor(image, cv2.COLOR_BGR2RGB, image)
-            
+
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WIDTH, HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, image)
 
         glEnable(GL_TEXTURE_2D)
@@ -68,6 +61,7 @@ class OculusDrawerCompatibility():
 
         glFlush()
         glutSwapBuffers()
+        
     
     def dispose_gl(self):
         pass
@@ -90,18 +84,18 @@ class HMDRender():
         glutDisplayFunc(self._display)
         glutReshapeFunc(self._reshape)
         glutKeyboardFunc(self._keyboard)
-
+        
         ### left window(sub window)
         glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH)
         glutInitWindowSize(WIDTH / 2, HEIGHT)
         self.win_subs.append(glutCreateSubWindow(self.win_main, 0, 0, WIDTH / 2, HEIGHT))
-        glutDisplayFunc(self.renderer.display_gl)
+        glutDisplayFunc(self._display_left)
         glutKeyboardFunc(self._keyboard)
-
+        
         ### right window(sub window)
         glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH)
         self.win_subs.append(glutCreateSubWindow(self.win_main, WIDTH / 2, 0, WIDTH / 2, HEIGHT))
-        glutDisplayFunc(self.renderer.display_gl)
+        glutDisplayFunc(self._display_right)
         glutKeyboardFunc(self._keyboard)
 
         self.renderer.init_gl()
@@ -113,6 +107,16 @@ class HMDRender():
     def _display(self):
         glClearColor(0, 0, 1, 0)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+    
+    def _display_left(self):
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+        self.renderer[0].display_rift_left()
+        self.renderer.display_gl()
+        
+    def _display_right(self):
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+        self.renderer[0].display_rift_right()
+        self.renderer.display_gl()
 
     def _idle(self):
         for win in self.win_subs:
