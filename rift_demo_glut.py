@@ -49,6 +49,7 @@ class OculusDrawerCompatibility():
         glTexCoord2f(1.0, 0.0)
         glVertex2f(WIDTH, HEIGHT)
         glEnd()
+        glFlush()
 
     def dispose_gl(self):
         pass
