@@ -49,7 +49,11 @@ class OculusDrawerCompatibility():
         glTexCoord2f(1.0, 0.0)
         glVertex2f(WIDTH, HEIGHT)
         glEnd()
+
         glFlush()
+
+    def resize_gl(self, w, h):
+        print(w, h)
 
     def dispose_gl(self):
         pass
@@ -58,8 +62,9 @@ class OculusDrawerCompatibility():
 class GlutDemoApp():
 
     def __init__(self, cap):
-        self.renderer = RiftGLRendererCompatibility()
-        self.renderer.append(OculusDrawerCompatibility(cap))
+        #self.renderer = RiftGLRendererCompatibility()
+        #self.renderer.append(OculusDrawerCompatibility(cap))
+        self.renderer = OculusDrawerCompatibility(cap)
 
         glutInit()
         glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH)
@@ -71,8 +76,8 @@ class GlutDemoApp():
         glutIdleFunc(self.renderer.display_gl)
         glutReshapeFunc(self.renderer.resize_gl)
         glutKeyboardFunc(self.key_press)
-        self.renderer.init_gl()
-        self.renderer.rift.recenter_pose()
+        #self.renderer.init_gl()
+        #self.renderer.rift.recenter_pose()
         glutMainLoop()
 
     def display(self):
