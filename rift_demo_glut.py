@@ -11,37 +11,25 @@ sys.path.append("procon28_pyovr/ovr")
 from rift_gl_renderer_compatibility import RiftGLRendererCompatibility
 
 
-WIDTH = 1280 / 2
-HEIGHT = 720 / 2
+WIDTH = 1024 
+HEIGHT = 512 
 N_RANGE = 1.0
 
 LEFT = 0
 RIGHT = 1
 
-class OculusDrawerCompatibility():
 
-    def __init__(self, caps):
-        self.caps = caps
+class OculusDrawerCompatibility(object):
+
+    def __init__(self, cap):
+        self.cap = cap
     
     def init_gl(self):
+        glEnable(GL_TEXTURE_2D)
         self.texs = glGenTextures(2)
 
-    def display_gl(self):
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-        glClearColor(0, 0, 1, 0)
-
-        images = []
-        for eye in range(2):
-            _, images = self.caps[eye].read()
-            cv2.cvtColor(images, cv2.COLOR_BGR2RGB, images[eye])
-
-        # LEFT texture        
-        glEnable(GL_TEXTURE_2D)
-    
-        glBindTexture(GL_TEXTURE_2D, self.texs[LEFT])
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WIDTH, HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, image)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+        _, image = self.cap.read()
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
@@ -50,72 +38,115 @@ class OculusDrawerCompatibility():
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
 
-        glBegin(GL_QUADS)
-        glTexCoord2f(0.0, 1.0)
-        glVertex2f(0.0, 0.0)
-        glTexCoord2f(1.0, 1.0)
-        glVertex2f(WIDTH, 0.0)
-        glTexCoord2f(1.0, 0.0)
-        glVertex2f(WIDTH, HEIGHT)
-        glTexCoord2f(0.0, 0.0)
-        glVertex2f(0.0, HEIGHT)
-        glEnd()
-
-        # RIGHT texture        
+        # RIGHT texture
         glBindTexture(GL_TEXTURE_2D, self.texs[RIGHT])
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WIDTH, HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, image_right)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WIDTH, HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, image)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+ 
+    def idle_gl(self):
+        _, image = self.cap.read()
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        return image
 
-        glBegin(GL_QUADS)
-        glTexCoord2f(0.0, 1.0)
-        glVertex2f(0.0, 0.0)
-        glTexCoord2f(1.0, 1.0)
-        glVertex2f(WIDTH, 0.0)
-        glTexCoord2f(1.0, 0.0)
-        glVertex2f(WIDTH, HEIGHT)
-        glTexCoord2f(0.0, 0.0)
-        glVertex2f(0.0, HEIGHT)
-        glEnd()
+    def display_gl(self):
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+        glClearColor(0, 0, 1, 0)
 
-        glFlush()
-
-    def resize_gl(self, w, h):
-        pass
-        """
-        if h == 0:
-            h = 1
-
-        glViewport(0, 0, w, h)
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
-
-        if w <= h:
-            glOrtho(-N_RANGE, N_RANGE, -N_RANGE * h / w, N_RANGE * h / w, -N_RANGE, N_RANGE)
-        else:
-            glOrtho(-N_RANGE * w / h, N_RANGE * w / h, -N_RANGE, N_RANGE, -N_RANGE, N_RANGE)
+        gluOrtho2D(0, WIDTH, 0, HEIGHT)
 
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
 
-        glutSwapBuffers()
-        """
-
-        
+    def resize_gl(self, w, h):
+        pass
     
     def dispose_gl(self):
         pass
 
 
+class EyeLeft(OculusDrawerCompatibility):
+    def __init__(self, cap):
+        self.cap = cap
+
+    def init_gl(self):
+        super(EyeLeft, self).init_gl()
+
+    def idle_gl(self):
+        image = super(EyeLeft, self).idle_gl()
+        cv2.imshow("left", image)
+        # LEFT texture
+        glBindTexture(GL_TEXTURE_2D, self.texs[LEFT])
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WIDTH, HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, image)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+
+    def display_gl(self):
+        super(EyeLeft, self).display_gl()      
+        glBindTexture(GL_TEXTURE_2D, self.texs[LEFT])
+        glPushMatrix()
+        glBegin(GL_QUADS)
+        glTexCoord2f(0.0, 0.0)
+        glVertex2f(0.0, HEIGHT)
+        glTexCoord2f(0.0, 1.0)
+        glVertex2f(0.0, 0.0)
+        glTexCoord2f(1.0, 1.0)
+        glVertex2f(WIDTH, 0.0)
+        glTexCoord2f(1.0, 0.0)
+        glVertex2f(WIDTH, HEIGHT)
+        glEnd()
+        glPopMatrix()
+        
+        glFlush()
+
+class EyeRight(OculusDrawerCompatibility):
+    def __init__(self, cap):
+        self.cap = cap
+
+    def init_gl(self):
+        super(EyeRight, self).init_gl()
+
+    def idle_gl(self):
+        image = super(EyeRight, self).idle_gl()
+        cv2.imshow("right", image)
+        # RIGHT texture
+        glBindTexture(GL_TEXTURE_2D, self.texs[RIGHT])
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, WIDTH, HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, image)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+ 
+    def display_gl(self):
+        super(EyeRight, self).display_gl()      
+        glBindTexture(GL_TEXTURE_2D, self.texs[RIGHT])
+        glPushMatrix()
+        glBegin(GL_QUADS)
+        glTexCoord2f(0.0, 0.0)
+        glVertex2f(0.0, HEIGHT)
+        glTexCoord2f(0.0, 1.0)
+        glVertex2f(0.0, 0.0)
+        glTexCoord2f(1.0, 1.0)
+        glVertex2f(WIDTH, 0.0)
+        glTexCoord2f(1.0, 0.0)
+        glVertex2f(WIDTH, HEIGHT)
+        glEnd()
+        glPopMatrix()
+
+        glFlush()
+
 class HMDRender():
 
-    def __init__(self, caps):
+    def __init__(self, cap):
         self.renderer = RiftGLRendererCompatibility()
-        self.renderer.append(OculusDrawerCompatibility(caps))
-        #self.renderer = OculusDrawerCompatibility(caps)
+        self.renderer.append(EyeLeft(cap[LEFT]))
+        self.renderer.append(EyeRight(cap[RIGHT]))
+        #self.renderer.append(OculusDrawerCompatibility(cap))
+        #self.renderer = OculusDrawerCompatibility(cap)
         
         glutInit()
         glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH)
-        glutInitWindowSize(WIDTH, HEIGHT)
+        glutInitWindowSize(WIDTH * 2, HEIGHT)
         glutInitWindowPosition(50, 50)
         win = glutCreateWindow(b"HighSight")
 
@@ -134,6 +165,7 @@ class HMDRender():
         glutSwapBuffers()
    
     def idle(self):
+        self.renderer.idle_gl()
         glutPostRedisplay()
 
     def resize(self, w, h):
