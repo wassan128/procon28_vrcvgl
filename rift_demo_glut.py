@@ -49,7 +49,7 @@ class OculusDrawerCompatibility(object):
 
     def display_gl(self):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-        glClearColor(0, 0, 1, 0)
+        glClearColor(0.0, 0.0, 0.0, 0.0)
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
@@ -68,6 +68,7 @@ class OculusDrawerCompatibility(object):
     
     def dispose_gl(self):
         pass
+
 
 
 class EyeLeft(OculusDrawerCompatibility):
@@ -92,6 +93,7 @@ class EyeLeft(OculusDrawerCompatibility):
 
         glPushMatrix()
         glBegin(GL_QUADS)
+        glColor3f(1, 0, 0)
         glTexCoord2f(0.0, 0.0)
         glVertex2f(0.0, TEX_HEIGHT)
         glTexCoord2f(0.0, 1.0)
@@ -129,6 +131,7 @@ class EyeRight(OculusDrawerCompatibility):
 
         glPushMatrix()
         glBegin(GL_QUADS)
+        glColor3f(0, 1, 0)
         glTexCoord2f(0.0, 0.0)
         glVertex2f(0.0, TEX_HEIGHT)
         glTexCoord2f(0.0, 1.0)
@@ -197,6 +200,16 @@ def main():
     for cap in caps:
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, TEX_WIDTH)
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, TEX_HEIGHT)
+    
+    """
+    while True:
+        _, left = caps[LEFT].read()
+        _, right = caps[RIGHT].read()
+        
+        image = cv2.hconcat([left, right])
+        cv2.imshow("weisoiya", image)
+        cv2.waitKey(1)
+    """
 
     HMDRender(caps)
 
