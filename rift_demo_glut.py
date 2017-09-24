@@ -32,6 +32,11 @@ class OculusRenderer():
         
         image = cv2.hconcat([left, right])
         return cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+    def _resize_image(self, image):
+        h = image.shape[0]
+        w = image.shape[1]
+        return cv2.resize(image, (w, h))
  
     def init_gl(self):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
@@ -58,8 +63,8 @@ class OculusRenderer():
     def display_gl(self):
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
 
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
@@ -72,15 +77,14 @@ class OculusRenderer():
         glEnable(GL_TEXTURE_2D)
         
         glBegin(GL_QUADS)
-        #glColor3f(1, 0, 0)
         glTexCoord2f(0.0, 0.0)
         glVertex2f(0.0, TEX_HEIGHT)
         glTexCoord2f(0.0, 1.0)
         glVertex2f(0.0, 0.0)
         glTexCoord2f(1.0, 1.0)
-        glVertex2f(TEX_WIDTH, 0.0)
+        glVertex2f(TEX_WIDTH * 4, 0.0)
         glTexCoord2f(1.0, 0.0)
-        glVertex2f(TEX_WIDTH, TEX_HEIGHT)
+        glVertex2f(TEX_WIDTH * 4, TEX_HEIGHT)
         glEnd()
 
         glFlush()
