@@ -1,5 +1,6 @@
 oculus*/
 *pyovr*/
 *.swp
+*.mp4
 render_orig.py
 hoge.py
