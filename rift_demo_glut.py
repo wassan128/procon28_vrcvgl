@@ -11,8 +11,8 @@ sys.path.append("procon28_pyovr/ovr")
 from rift_gl_renderer_compatibility import RiftGLRendererCompatibility
 
 
-TEX_WIDTH = 1024 
-TEX_HEIGHT = 512 
+TEX_WIDTH = 1280 
+TEX_HEIGHT = 720 
 LEFT = 0
 RIGHT = 1
 
@@ -20,17 +20,16 @@ WIN_WIDTH = 300
 WIN_HEIGHT = 300 
 N_RANGE = 1.0
 
+ESC = 27
+
 
 class OculusRenderer():
-    def __init__(self, caps):
-        self.caps = caps
+    def __init__(self, cap):
+        self.cap = cap
         self.tex = -1
 
-    def _concat_image(self):
-        _, left = self.caps[LEFT].read()
-        _, right = self.caps[RIGHT].read()
-        
-        image = cv2.hconcat([left, right])
+    def _load_image(self):
+        _, image = self.cap.read()
         return cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
     def _resize_image(self, image):
@@ -51,18 +50,22 @@ class OculusRenderer():
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
 
-        image = self._concat_image()
+        image = self._load_image()
         glBindTexture(GL_TEXTURE_2D, self.tex)
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, TEX_WIDTH, TEX_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, image)
     
     def idle_gl(self):
-        image = self._concat_image()
-        glBindTexture(GL_TEXTURE_2D, self.tex)
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, TEX_WIDTH, TEX_HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, image)
+        try:
+            image = self._load_image()
+            glBindTexture(GL_TEXTURE_2D, self.tex)
+            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, TEX_WIDTH, TEX_HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, image)
+
+        except Exception as e:
+            pass
 
     def display_gl(self):
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
 
@@ -82,9 +85,9 @@ class OculusRenderer():
         glTexCoord2f(0.0, 1.0)
         glVertex2f(0.0, 0.0)
         glTexCoord2f(1.0, 1.0)
-        glVertex2f(TEX_WIDTH * 4, 0.0)
+        glVertex2f(TEX_WIDTH, 0.0)
         glTexCoord2f(1.0, 0.0)
-        glVertex2f(TEX_WIDTH * 4, TEX_HEIGHT)
+        glVertex2f(TEX_WIDTH, TEX_HEIGHT)
         glEnd()
 
         glFlush()
@@ -98,7 +101,8 @@ class HMDRender():
 
     def __init__(self, caps):
         self.renderer = RiftGLRendererCompatibility()
-        self.renderer.append(OculusRenderer(caps))
+        self.renderer.append(OculusRenderer(caps[LEFT]))
+        self.renderer.append(OculusRenderer(caps[RIGHT]))
 
         glutInit()
         glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH)
@@ -127,7 +131,7 @@ class HMDRender():
         self.renderer.resize_gl(w, h)
 
     def key_press(self, key, x, y):
-        if ord(key) == 27:
+        if ord(key) == ESC:
             if bool(glutLeaveMainLoop):
                 glutLeaveMainLoop()
             else:
@@ -137,9 +141,9 @@ class HMDRender():
 
 def main():
     caps = []
-    caps.append(cv2.VideoCapture(0))
-    caps.append(cv2.VideoCapture(0))
-
+    caps.append(cv2.VideoCapture("test3.mp4"))
+    caps.append(cv2.VideoCapture("test4.mp4"))
+    
     for cap in caps:
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, TEX_WIDTH)
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, TEX_HEIGHT)
